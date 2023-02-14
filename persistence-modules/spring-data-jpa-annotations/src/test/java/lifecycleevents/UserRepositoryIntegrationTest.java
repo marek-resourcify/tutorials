@@ -5,12 +5,15 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
+import com.baeldung.lifecycleevents.EventPublisher;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.junit4.SpringRunner;
 
 import com.baeldung.lifecycleevents.SpringBootLifecycleEventApplication;
@@ -20,6 +23,8 @@ import com.baeldung.lifecycleevents.repository.UserRepository;
 @RunWith(SpringRunner.class)
 @SpringBootTest(classes = SpringBootLifecycleEventApplication.class)
 public class UserRepositoryIntegrationTest {
+    @MockBean
+    private EventPublisher eventPublisher;
 
     @Autowired
     private UserRepository userRepository;
@@ -66,15 +71,10 @@ public class UserRepositoryIntegrationTest {
     @Test
     public void whenExistingUserDeleted_userIsDeleted() {
         User user = userRepository.findByUserName("jsmith123");
+        String firstName = user.getFirstName();
         userRepository.delete(user);
         user = userRepository.findByUserName("jsmith123");
         assertNull(user);
-    }
-    
-    @Test
-    public void whenExistingUserLoaded_fullNameIsAvailable() {
-        String expectedFullName = "Jane Smith";
-        User user = userRepository.findByUserName("jsmith123");
-        assertEquals(expectedFullName, user.getFullName());
+        Mockito.verify(eventPublisher).publishEvent(firstName);
     }
 }

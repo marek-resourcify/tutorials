@@ -8,32 +8,26 @@ import javax.persistence.PrePersist;
 import javax.persistence.PreRemove;
 import javax.persistence.PreUpdate;
 
+import com.baeldung.lifecycleevents.EventPublisher;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
+@Component
 public class AuditTrailListener {
     private static Log log = LogFactory.getLog(AuditTrailListener.class);
-    
-    @PrePersist
-    @PreUpdate
+
+    @Autowired
+    EventPublisher eventPublisher;
+
     @PreRemove
-    private void beforeAnyUpdate(User user) {
+    private void beforeRemove(User user) {
+        eventPublisher.publishEvent(user.getFirstName());
         if (user.getId() == 0) {
             log.info("[USER AUDIT] About to add a user");
         } else {
             log.info("[USER AUDIT] About to update/delete user: " + user.getId());
         }
-    }
-    
-    @PostPersist
-    @PostUpdate
-    @PostRemove
-    private void afterAnyUpdate(User user) {
-        log.info("[USER AUDIT] add/update/delete complete for user: " + user.getId());
-    }
-    
-    @PostLoad
-    private void afterLoad(User user) {
-        log.info("[USER AUDIT] user loaded from database: " + user.getId());
     }
 }
